@@ -85,4 +85,13 @@ create policy "Users can insert their own data"
 create policy "Users can update their own data"
   on public.user_project_data for update
   using (auth.uid() = user_id);
+
+-- 4. تفعيل Supabase Realtime (ضروري للتحديث اللحظي بدون Refresh بين الجوال والكمبيوتر)
+alter publication supabase_realtime add table public.user_project_data;
+alter table public.user_project_data replica identity full;
+`;
+
+export const SUPABASE_ENABLE_REALTIME_SQL = `-- كود تفعيل الـ Realtime (إذا كان جدول user_project_data منشأ مسبقاً لديك):
+alter publication supabase_realtime add table public.user_project_data;
+alter table public.user_project_data replica identity full;
 `;

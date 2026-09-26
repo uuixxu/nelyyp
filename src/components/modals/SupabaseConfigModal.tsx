@@ -13,9 +13,11 @@ import {
   Code2,
   ShieldCheck,
   UploadCloud,
+  Zap,
+  Radio,
 } from 'lucide-react';
 import { useDevTracker } from '../../context/DevTrackerContext';
-import { SUPABASE_SQL_SCHEMA } from '../../lib/supabase';
+import { SUPABASE_SQL_SCHEMA, SUPABASE_ENABLE_REALTIME_SQL } from '../../lib/supabase';
 
 export const SupabaseConfigModal: React.FC = () => {
   const {
@@ -26,6 +28,7 @@ export const SupabaseConfigModal: React.FC = () => {
     syncStatus,
     syncError,
     user,
+    isRealtimeConnected,
     migrateLocalDataToSupabase,
     hasLocalDataToMigrate,
     setIsAuthModalOpen,
@@ -34,6 +37,7 @@ export const SupabaseConfigModal: React.FC = () => {
   const [url, setUrl] = useState(supabaseConfig.url || '');
   const [anonKey, setAnonKey] = useState(supabaseConfig.anonKey || '');
   const [copiedSql, setCopiedSql] = useState(false);
+  const [copiedRealtimeSql, setCopiedRealtimeSql] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   if (!isConfigModalOpen) return null;
@@ -51,6 +55,12 @@ export const SupabaseConfigModal: React.FC = () => {
     setTimeout(() => setCopiedSql(false), 2500);
   };
 
+  const handleCopyRealtimeSql = () => {
+    navigator.clipboard.writeText(SUPABASE_ENABLE_REALTIME_SQL);
+    setCopiedRealtimeSql(true);
+    setTimeout(() => setCopiedRealtimeSql(false), 2500);
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4 animate-in fade-in duration-150">
       <div className="bg-[#12161f] border border-[#21262d] rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto p-6 shadow-2xl space-y-5">
@@ -61,9 +71,9 @@ export const SupabaseConfigModal: React.FC = () => {
               <Database size={18} />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">إعداد وربط قاعدة بيانات Supabase</h3>
+              <h3 className="text-base font-bold text-white">إعداد وربط قاعدة بيانات Supabase Realtime</h3>
               <p className="text-[11px] text-slate-400">
-                حفظ بيانات Demonfall 2 ومزامنتها لحظياً في السحابة
+                مزامنة فورية بدون Refresh بين الكمبيوتر والجوال
               </p>
             </div>
           </div>
@@ -76,7 +86,7 @@ export const SupabaseConfigModal: React.FC = () => {
         </div>
 
         {/* Current Connection Status Indicator */}
-        <div className="p-3.5 rounded-xl bg-[#161d28] border border-[#263346] flex items-center justify-between gap-3 text-xs">
+        <div className="p-3.5 rounded-xl bg-[#161d28] border border-[#263346] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2.5">
             <div
               className={`w-3 h-3 rounded-full ${
@@ -101,9 +111,22 @@ export const SupabaseConfigModal: React.FC = () => {
                   ? 'تم ربط Supabase، بانتظار تسجيل الدخول'
                   : 'تنبيه: يتطلب فحص الاتصال أو إنشاء الجدول'}
               </span>
-              <span className="text-[11px] text-slate-400">
-                {user ? `المستخدم الحالي: ${user.email}` : 'لم يتم تسجيل الدخول بعد'}
-              </span>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-[11px] text-slate-400">
+                  {user ? `المستخدم: ${user.email}` : 'لم يتم تسجيل الدخول'}
+                </span>
+                <span aria-hidden="true" className="text-slate-600">·</span>
+                <span
+                  className={`text-[10px] font-mono px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                    isRealtimeConnected
+                      ? 'text-emerald-400 bg-emerald-950/60 border border-emerald-800/60'
+                      : 'text-amber-400 bg-amber-950/60 border border-amber-800/60'
+                  }`}
+                >
+                  <Radio size={10} className={isRealtimeConnected ? 'animate-pulse' : ''} />
+                  <span>{isRealtimeConnected ? 'Realtime: متصل لحظياً (Live)' : 'Realtime: بانتظار الاتصال'}</span>
+                </span>
+              </div>
             </div>
           </div>
 
@@ -113,7 +136,7 @@ export const SupabaseConfigModal: React.FC = () => {
                 setIsConfigModalOpen(false);
                 setIsAuthModalOpen(true);
               }}
-              className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white font-medium text-xs shadow-xs cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white font-medium text-xs shadow-xs cursor-pointer self-start sm:self-auto shrink-0"
             >
               تسجيل الدخول
             </button>
@@ -129,6 +152,37 @@ export const SupabaseConfigModal: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Realtime Quick Activation Notice (For existing database) */}
+        <div className="p-4 rounded-xl bg-gradient-to-r from-red-950/30 via-[#18202d] to-[#12161f] border border-red-500/30 space-y-2.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Zap size={16} className="text-amber-400" />
+              <span className="text-xs font-bold text-white">
+                تفعيل الـ Realtime للجدول الحالي في Supabase (خطوة واحدة فقط)
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={handleCopyRealtimeSql}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-red-600 hover:bg-red-500 text-white text-[11px] font-mono transition-colors cursor-pointer shadow-xs"
+            >
+              {copiedRealtimeSql ? <Check size={12} /> : <Copy size={12} />}
+              <span>{copiedRealtimeSql ? 'تم النسخ!' : 'نسخ كود Realtime'}</span>
+            </button>
+          </div>
+
+          <p className="text-[11px] text-slate-300 leading-relaxed">
+            إذا كان الجدول موجوداً لديك بالفعل، قم بنسخ هذا السطر وتشغيله في <strong>SQL Editor</strong> في Supabase لتمكين البث اللحظي السريع بدون Refresh:
+          </p>
+
+          <pre
+            className="p-2.5 rounded-lg bg-[#0b0e14] border border-[#21262d] text-emerald-300 text-[11px] font-mono overflow-x-auto leading-snug"
+            dir="ltr"
+          >
+            {SUPABASE_ENABLE_REALTIME_SQL}
+          </pre>
+        </div>
 
         {/* Credentials Form */}
         <form onSubmit={handleSave} className="space-y-3.5">
@@ -203,13 +257,13 @@ export const SupabaseConfigModal: React.FC = () => {
           </div>
         </form>
 
-        {/* SQL Script Box */}
+        {/* Full SQL Script Box */}
         <div className="space-y-2 pt-2 border-t border-[#21262d]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Code2 size={16} className="text-emerald-400" />
               <span className="text-xs font-bold text-white">
-                كود إنشاء جدول البيانات (SQL Schema)
+                كود إنشاء جدول البيانات الكامل مع Realtime (SQL Schema)
               </span>
             </div>
             <button
@@ -218,16 +272,16 @@ export const SupabaseConfigModal: React.FC = () => {
               className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#1c2331] hover:bg-[#252f42] text-slate-200 text-[11px] font-mono transition-colors cursor-pointer"
             >
               {copiedSql ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
-              <span>{copiedSql ? 'تم النسخ!' : 'نسخ الكود'}</span>
+              <span>{copiedSql ? 'تم النسخ!' : 'نسخ الكود الكامل'}</span>
             </button>
           </div>
 
           <p className="text-[11px] text-slate-400 leading-relaxed">
-            انسخ هذا الكود والصقه في <strong>SQL Editor</strong> داخل لوحة تحكم مشروعك في Supabase واضغط Run لإنشاء الجدول مع تفعيل حماية RLS تلقائياً:
+            إذا كنت تنشئ مشروعاً جديداً، انسخ هذا الكود بالكامل ونفذه في <strong>SQL Editor</strong> في Supabase:
           </p>
 
           <pre
-            className="p-3 rounded-xl bg-[#0b0e14] border border-[#21262d] text-slate-300 text-[11px] font-mono overflow-x-auto max-h-40 leading-snug"
+            className="p-3 rounded-xl bg-[#0b0e14] border border-[#21262d] text-slate-300 text-[11px] font-mono overflow-x-auto max-h-36 leading-snug"
             dir="ltr"
           >
             {SUPABASE_SQL_SCHEMA}
@@ -261,3 +315,4 @@ export const SupabaseConfigModal: React.FC = () => {
     </div>
   );
 };
+

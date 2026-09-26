@@ -28,6 +28,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMobileMenu }) => {
     stats,
     user,
     syncStatus,
+    isRealtimeConnected,
     setIsAuthModalOpen,
   } = useDevTracker();
 
@@ -108,11 +109,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMobileMenu }) => {
                 <Cloud size={14} className="text-emerald-400" />
                 <span
                   className={`absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full ${
-                    syncStatus === 'syncing' ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'
+                    syncStatus === 'syncing' ? 'bg-amber-400 animate-ping' : isRealtimeConnected ? 'bg-emerald-400' : 'bg-amber-400'
                   }`}
                 />
               </div>
               <span className="hidden md:inline truncate max-w-[130px]">{user.email}</span>
+              {isRealtimeConnected && (
+                <span className="hidden xl:inline text-[9px] font-mono text-emerald-400 bg-emerald-950/80 px-1.5 py-0.2 rounded border border-emerald-800/60 font-semibold">
+                  LIVE ⚡
+                </span>
+              )}
             </button>
           ) : (
             <button

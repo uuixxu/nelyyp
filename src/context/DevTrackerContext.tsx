@@ -45,6 +45,7 @@ interface DevTrackerContextType {
   syncStatus: SyncStatus;
   lastSyncedAt: Date | null;
   syncError: string | null;
+  isRealtimeConnected: boolean;
   supabaseConfig: SupabaseConfig;
   isAuthModalOpen: boolean;
   setIsAuthModalOpen: (open: boolean) => void;
@@ -136,6 +137,7 @@ export const DevTrackerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [session, setSession] = useState<Session | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('not_configured');
+  const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -143,9 +145,64 @@ export const DevTrackerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [supabaseConfig, setSupabaseConfig] = useState<SupabaseConfig>(getSupabaseConfig());
   const [hasLocalDataToMigrate, setHasLocalDataToMigrate] = useState(false);
 
+  // Unique client ID to distinguish sender from receivers in realtime broadcasts
+  const clientId = useRef<string>('c_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36));
+
   // Sync ref flags to prevent circular updates
   const isSyncingFromCloudRef = useRef(false);
   const syncTimeoutRef = useRef<any>(null);
+  const realtimeChannelRef = useRef<any>(null);
+  const localBroadcastRef = useRef<BroadcastChannel | null>(null);
+
+  // Helper to ensure data integrity and prevent any duplicate tasks, ideas, bugs, or progression items
+  const sanitizeAndDeduplicate = useCallback((incoming: DevTrackerData): DevTrackerData => {
+    if (!incoming || !incoming.project) return incoming;
+
+    // Deduplicate tasks by unique id
+    const taskMap = new Map<string, Task>();
+    (incoming.tasks || []).forEach((t) => {
+      if (t && t.id) taskMap.set(t.id, t);
+    });
+
+    // Deduplicate ideas by unique id
+    const ideaMap = new Map<string, Idea>();
+    (incoming.ideas || []).forEach((i) => {
+      if (i && i.id) ideaMap.set(i.id, i);
+    });
+
+    // Deduplicate bugs by unique id
+    const bugMap = new Map<string, Bug>();
+    (incoming.bugs || []).forEach((b) => {
+      if (b && b.id) bugMap.set(b.id, b);
+    });
+
+    // Deduplicate progression items by category and item id
+    const prog = (incoming.progression || []).map((cat) => {
+      const itemMap = new Map<string, ProgressionItem>();
+      (cat.items || []).forEach((item) => {
+        if (item && item.id) itemMap.set(item.id, item);
+      });
+      return {
+        ...cat,
+        items: Array.from(itemMap.values()),
+      };
+    });
+
+    // Deduplicate activities by id
+    const actMap = new Map<string, ActivityLog>();
+    (incoming.activities || []).forEach((act) => {
+      if (act && act.id) actMap.set(act.id, act);
+    });
+
+    return {
+      ...incoming,
+      tasks: Array.from(taskMap.values()),
+      ideas: Array.from(ideaMap.values()),
+      bugs: Array.from(bugMap.values()),
+      progression: prog,
+      activities: Array.from(actMap.values()).slice(0, 30),
+    };
+  }, []);
 
   // Always keep localStorage updated as offline resilience
   useEffect(() => {
@@ -306,14 +363,44 @@ export const DevTrackerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
-  // Auto-sync debounced when state changes
+  // Auto-sync debounced when state changes + immediate realtime broadcast to other devices and tabs
   useEffect(() => {
     if (!user || isSyncingFromCloudRef.current) return;
 
     const client = getSupabaseClient();
     if (!client) return;
 
-    // Debounce to avoid spamming database on rapid typing
+    // 1. Instantly broadcast to other open tabs in the same browser (0ms delay)
+    if (localBroadcastRef.current) {
+      try {
+        localBroadcastRef.current.postMessage({
+          senderId: clientId.current,
+          projectData: data,
+          updatedAt: new Date().toISOString(),
+        });
+      } catch (e) {
+        // BroadcastChannel send error ignored
+      }
+    }
+
+    // 2. Instantly broadcast to other devices over Supabase Realtime WebSocket channel (< 50ms)
+    if (realtimeChannelRef.current && isRealtimeConnected) {
+      try {
+        realtimeChannelRef.current.send({
+          type: 'broadcast',
+          event: 'PROJECT_UPDATED',
+          payload: {
+            senderId: clientId.current,
+            projectData: data,
+            updatedAt: new Date().toISOString(),
+          },
+        });
+      } catch (e) {
+        // channel send error ignored
+      }
+    }
+
+    // 3. Debounce to push authoritative state into Postgres database
     if (syncTimeoutRef.current) {
       clearTimeout(syncTimeoutRef.current);
     }
@@ -321,48 +408,135 @@ export const DevTrackerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setSyncStatus('syncing');
     syncTimeoutRef.current = setTimeout(() => {
       pushDataToCloud(user.id, data);
-    }, 600);
+    }, 500);
 
     return () => {
       if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
     };
-  }, [data, user]);
+  }, [data, user, isRealtimeConnected]);
 
   // Listen to Realtime updates from other tabs / devices
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setIsRealtimeConnected(false);
+      return;
+    }
+
     const client = getSupabaseClient();
     if (!client) return;
 
-    const channel = client
-      .channel('user_project_data_changes')
+    // A. Inter-tab broadcast channel for instant zero-latency sync in the same browser
+    let localBroadcast: BroadcastChannel | null = null;
+    try {
+      localBroadcast = new BroadcastChannel('roblox_dev_tracker_intertab_' + user.id);
+      localBroadcast.onmessage = (event) => {
+        if (
+          event.data &&
+          event.data.senderId !== clientId.current &&
+          event.data.projectData
+        ) {
+          isSyncingFromCloudRef.current = true;
+          const sanitized = sanitizeAndDeduplicate(event.data.projectData as DevTrackerData);
+          setData(sanitized);
+          setLastSyncedAt(new Date(event.data.updatedAt || Date.now()));
+          setSyncStatus('synced');
+          setTimeout(() => {
+            isSyncingFromCloudRef.current = false;
+          }, 300);
+        }
+      };
+      localBroadcastRef.current = localBroadcast;
+    } catch (e) {
+      // BroadcastChannel might not be supported in some embedded iframes
+    }
+
+    // B. Supabase Realtime Channel for cross-device live synchronization
+    const channelTopic = `user_project_realtime:${user.id}`;
+    const channel = client.channel(channelTopic, {
+      config: {
+        broadcast: { ack: false, self: false },
+      },
+    });
+
+    channel
+      // 1. Listen to Postgres table changes (INSERT, UPDATE, DELETE from WAL replication)
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: '*', // Listen to INSERT, UPDATE, DELETE
           schema: 'public',
           table: 'user_project_data',
           filter: `user_id=eq.${user.id}`,
         },
         (payload: any) => {
-          if (payload.new && payload.new.project_data) {
-            // Received update from another device
+          console.log('[Supabase Realtime] postgres_changes received:', payload.eventType);
+
+          // Handle DELETE event
+          if (payload.eventType === 'DELETE') {
             isSyncingFromCloudRef.current = true;
-            setData(payload.new.project_data as DevTrackerData);
+            setData(initialTrackerData);
+            setTimeout(() => {
+              isSyncingFromCloudRef.current = false;
+            }, 300);
+            return;
+          }
+
+          // Handle INSERT or UPDATE event
+          if (payload.new && payload.new.project_data) {
+            isSyncingFromCloudRef.current = true;
+            const sanitized = sanitizeAndDeduplicate(payload.new.project_data as DevTrackerData);
+            setData(sanitized);
             setLastSyncedAt(new Date(payload.new.updated_at || Date.now()));
             setSyncStatus('synced');
             setTimeout(() => {
               isSyncingFromCloudRef.current = false;
-            }, 500);
+            }, 300);
           }
         }
       )
-      .subscribe();
+      // 2. Listen to WebSocket peer broadcast for immediate live response across devices
+      .on('broadcast', { event: 'PROJECT_UPDATED' }, (msg: any) => {
+        const payload = msg.payload;
+        if (
+          payload &&
+          payload.senderId !== clientId.current &&
+          payload.projectData
+        ) {
+          console.log('[Supabase Realtime] Live broadcast update received from other device');
+          isSyncingFromCloudRef.current = true;
+          const sanitized = sanitizeAndDeduplicate(payload.projectData as DevTrackerData);
+          setData(sanitized);
+          setLastSyncedAt(new Date(payload.updatedAt || Date.now()));
+          setSyncStatus('synced');
+          setTimeout(() => {
+            isSyncingFromCloudRef.current = false;
+          }, 300);
+        }
+      })
+      .subscribe((status, err) => {
+        console.log('[Supabase Realtime] Channel status:', status);
+        if (status === 'SUBSCRIBED') {
+          setIsRealtimeConnected(true);
+        } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED' || status === 'TIMED_OUT') {
+          setIsRealtimeConnected(false);
+          if (err) {
+            console.warn('[Supabase Realtime] Subscription issue:', err);
+          }
+        }
+      });
+
+    realtimeChannelRef.current = channel;
 
     return () => {
+      if (localBroadcast) {
+        localBroadcast.close();
+        localBroadcastRef.current = null;
+      }
       client.removeChannel(channel);
+      realtimeChannelRef.current = null;
+      setIsRealtimeConnected(false);
     };
-  }, [user]);
+  }, [user, sanitizeAndDeduplicate]);
 
   // Auth Functions
   const signUpWithEmail = async (email: string, pass: string) => {
@@ -858,6 +1032,7 @@ export const DevTrackerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         syncStatus,
         lastSyncedAt,
         syncError,
+        isRealtimeConnected,
         supabaseConfig,
         isAuthModalOpen,
         setIsAuthModalOpen,
