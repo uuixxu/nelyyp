@@ -1,0 +1,6 @@
+{
+  "name": "Roblox Dev Tracker",
+  "description": "أداة احترافية لإدارة وتتبع مراحل تطوير مابات Roblox، المهام، الأفكار، والأخطاء البرمجية.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
