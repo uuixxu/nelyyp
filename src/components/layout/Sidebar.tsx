@@ -14,6 +14,8 @@ import {
   ChevronRight,
   Layers,
   Sparkles,
+  Cloud,
+  Database,
 } from 'lucide-react';
 import { useDevTracker } from '../../context/DevTrackerContext';
 
@@ -31,6 +33,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpenMobile, setIsOpenMobile 
     setIsProjectSettingsOpen,
     setIsExportImportOpen,
     setIsQuickAddOpen,
+    user,
+    setIsAuthModalOpen,
+    setIsConfigModalOpen,
   } = useDevTracker();
 
   const navItems = [
@@ -221,6 +226,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpenMobile, setIsOpenMobile 
 
         {/* Sidebar Footer Controls */}
         <div className="p-3 border-t border-[#21262d] bg-[#0c1017] space-y-1">
+          {/* Cloud User Status */}
+          <button
+            onClick={() => setIsAuthModalOpen(true)}
+            className="w-full flex items-center justify-between px-3 py-2 rounded-md text-xs transition-colors cursor-pointer bg-[#141b26]/70 hover:bg-[#1a2332] border border-[#232c3d]"
+          >
+            <div className="flex items-center gap-2 truncate">
+              <Cloud size={15} className={user ? 'text-emerald-400' : 'text-slate-400'} />
+              <span className={`truncate ${user ? 'text-emerald-300 font-mono' : 'text-slate-300'}`}>
+                {user ? user.email : 'تسجيل دخول السحابة'}
+              </span>
+            </div>
+            <span
+              className={`w-2 h-2 rounded-full shrink-0 ${
+                user ? 'bg-emerald-400' : 'bg-slate-500'
+              }`}
+            />
+          </button>
+
           <button
             onClick={() => setIsProjectSettingsOpen(true)}
             className="w-full flex items-center justify-between px-3 py-2 rounded-md text-xs text-slate-400 hover:text-slate-200 hover:bg-[#161c27] transition-colors cursor-pointer"
@@ -228,6 +251,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpenMobile, setIsOpenMobile 
             <div className="flex items-center gap-2">
               <Settings size={15} />
               <span>إعدادات الماب والمشروع</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setIsConfigModalOpen(true)}
+            className="w-full flex items-center justify-between px-3 py-2 rounded-md text-xs text-slate-400 hover:text-slate-200 hover:bg-[#161c27] transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <Database size={15} />
+              <span>ربط قاعدة بيانات Supabase</span>
             </div>
           </button>
 

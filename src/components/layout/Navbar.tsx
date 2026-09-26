@@ -10,6 +10,7 @@ import {
   ExternalLink,
   Code2,
   Layers,
+  Cloud,
 } from 'lucide-react';
 import { useDevTracker } from '../../context/DevTrackerContext';
 
@@ -25,6 +26,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMobileMenu }) => {
     setIsQuickAddOpen,
     setIsProjectSettingsOpen,
     stats,
+    user,
+    syncStatus,
+    setIsAuthModalOpen,
   } = useDevTracker();
 
   return (
@@ -93,11 +97,33 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMobileMenu }) => {
 
         {/* Right Actions */}
         <div className="flex items-center gap-2">
-          {/* Saved in Browser Indicator */}
-          <div className="hidden md:flex items-center gap-1.5 text-[11px] text-slate-400 font-mono px-2.5 py-1 rounded-md bg-[#161b22]/50 border border-[#21262d]">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            <span>حفظ تلقائي</span>
-          </div>
+          {/* Supabase Cloud Sync / Auth Button */}
+          {user ? (
+            <button
+              onClick={() => setIsAuthModalOpen(true)}
+              className="flex items-center gap-2 text-xs font-mono px-2.5 py-1.5 rounded-lg bg-[#161f2e] hover:bg-[#1f2b3e] border border-emerald-500/30 text-emerald-300 transition-colors cursor-pointer"
+              title="متصل بالسحابة - انقر لعرض تفاصيل الحساب"
+            >
+              <div className="relative">
+                <Cloud size={14} className="text-emerald-400" />
+                <span
+                  className={`absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full ${
+                    syncStatus === 'syncing' ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'
+                  }`}
+                />
+              </div>
+              <span className="hidden md:inline truncate max-w-[130px]">{user.email}</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setIsAuthModalOpen(true)}
+              className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg bg-[#161c27] hover:bg-[#202737] border border-[#2b3547] text-slate-300 hover:text-white transition-colors cursor-pointer"
+              title="تسجيل الدخول لحفظ ومزامنة بيانات الماب في السحابة"
+            >
+              <Cloud size={14} className="text-red-400" />
+              <span className="hidden sm:inline">تسجيل الدخول السحابي</span>
+            </button>
+          )}
 
           {/* Quick Add Button */}
           <button
