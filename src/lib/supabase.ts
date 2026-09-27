@@ -1,5 +1,10 @@
 import { createClient, SupabaseClient, User, Session } from '@supabase/supabase-js';
 
+export const DEFAULT_SUPABASE_URL = 'https://xqvtgcfxygbswbtlaqjc.supabase.co';
+export const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhxdnRnY2Z4eWdic3didGxhcWpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0MzA5MTIsImV4cCI6MjEwNjAwNjkxMn0.TQ6CyLIPs8tfBDL8NlQAjO45E-kuBZpcE1Is-JPjvlA';
+export const DEFAULT_DEV_EMAIL = 'uuixxu@gmail.com';
+export const DEFAULT_DEV_PASSWORD = 'uuixxu@gmail.com';
+
 const STORAGE_CUSTOM_URL_KEY = 'roblox_dev_tracker_supabase_url';
 const STORAGE_CUSTOM_KEY_KEY = 'roblox_dev_tracker_supabase_key';
 
@@ -16,8 +21,11 @@ export const getSupabaseConfig = (): SupabaseConfig => {
   const customUrl = localStorage.getItem(STORAGE_CUSTOM_URL_KEY) || '';
   const customKey = localStorage.getItem(STORAGE_CUSTOM_KEY_KEY) || '';
 
-  const url = customUrl || envUrl;
-  const anonKey = customKey || envKey;
+  const cleanCustomUrl = customUrl && !customUrl.includes('your-project') ? customUrl : '';
+  const cleanCustomKey = customKey && !customKey.includes('your-anon-key') ? customKey : '';
+
+  const url = cleanCustomUrl || envUrl || DEFAULT_SUPABASE_URL;
+  const anonKey = cleanCustomKey || envKey || DEFAULT_SUPABASE_ANON_KEY;
 
   const isConfigured = Boolean(url && anonKey && url.includes('supabase.co'));
 

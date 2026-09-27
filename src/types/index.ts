@@ -60,9 +60,19 @@ export interface Bug {
   fixedAt?: string;
 }
 
+export interface DevNote {
+  id: string;
+  title: string;
+  content: string;
+  category: 'architecture' | 'lua_snippet' | 'game_design' | 'changelog' | 'general';
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ActivityLog {
   id: string;
-  type: 'task_completed' | 'task_created' | 'bug_fixed' | 'bug_reported' | 'milestone_checked' | 'idea_added';
+  type: 'task_completed' | 'task_created' | 'bug_fixed' | 'bug_reported' | 'milestone_checked' | 'idea_added' | 'note_created';
   message: string;
   timestamp: string;
 }
@@ -82,5 +92,6 @@ export interface DevTrackerData {
   tasks: Task[];
   ideas: Idea[];
   bugs: Bug[];
+  notes?: DevNote[];
   activities: ActivityLog[];
 }

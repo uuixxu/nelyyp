@@ -9,9 +9,7 @@ import {
   CheckCircle2,
   AlertCircle,
   ShieldCheck,
-  Sparkles,
-  Database,
-  ArrowRight,
+  Terminal,
 } from 'lucide-react';
 import { useDevTracker } from '../../context/DevTrackerContext';
 
@@ -23,14 +21,15 @@ export const AuthModal: React.FC = () => {
     signOut,
     signInWithEmail,
     signUpWithEmail,
+    signInAsDefaultUser,
+    defaultEmail,
     supabaseConfig,
     setIsConfigModalOpen,
-    syncStatus,
   } = useDevTracker();
 
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState(defaultEmail || 'uuixxu@gmail.com');
+  const [password, setPassword] = useState('uuixxu@gmail.com');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -84,57 +83,57 @@ export const AuthModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4 animate-in fade-in duration-150">
-      <div className="bg-[#12161f] border border-[#21262d] rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4">
+      <div className="bg-[#111114] border border-[#27272a] rounded-lg w-full max-w-md p-5 shadow-lg space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#21262d] pb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-red-600/15 text-red-400 border border-red-500/25">
-              <Cloud size={18} />
+        <div className="flex items-center justify-between border-b border-[#27272a] pb-3">
+          <div className="flex items-center gap-2">
+            <div className="p-1 rounded bg-[#18181b] text-[#8b5cf6] border border-[#27272a]">
+              <Cloud size={14} />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">
-                {user ? 'حساب مطور Roblox' : mode === 'signin' ? 'تسجيل الدخول السحابي' : 'إنشاء حساب مطور جديد'}
+              <h3 className="text-sm font-semibold text-[#f4f4f5]">
+                {user ? 'حساب مطور Roblox' : mode === 'signin' ? 'تسجيل الدخول السحابي' : 'إنشاء حساب مطور'}
               </h3>
-              <p className="text-[11px] text-slate-400">
-                مزامنة بيانات مابك تلقائياً بين الكمبيوتر والجوال عبر Supabase
+              <p className="text-[11px] text-[#a1a1aa]">
+                مزامنة بيانات مشروعك تلقائياً عبر سحابة Supabase و Realtime
               </p>
             </div>
           </div>
           <button
             onClick={() => setIsAuthModalOpen(false)}
-            className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+            className="p-1 text-[#71717a] hover:text-[#f4f4f5] rounded hover:bg-[#18181b] transition-colors cursor-pointer"
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 
         {/* If user is already logged in, show user info and logout option */}
         {user ? (
-          <div className="space-y-4 pt-1">
-            <div className="p-4 rounded-xl bg-[#161d28] border border-[#263346] space-y-3">
+          <div className="space-y-3.5 pt-1">
+            <div className="p-3.5 rounded-lg bg-[#18181b] border border-[#27272a] space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-400">البريد الإلكتروني المسجل:</span>
-                <span className="text-xs font-mono font-semibold text-emerald-400 flex items-center gap-1.5">
-                  <ShieldCheck size={14} />
+                <span className="text-xs text-[#a1a1aa]">البريد الإلكتروني المسجل:</span>
+                <span className="text-xs font-mono font-medium text-[#22c55e] flex items-center gap-1.5">
+                  <ShieldCheck size={13} />
                   <span>متصل بالسحابة</span>
                 </span>
               </div>
-              <div className="text-sm font-semibold text-white font-mono bg-[#11151e] p-2.5 rounded-lg border border-[#202737] break-all">
+              <div className="text-xs font-mono font-medium text-[#f4f4f5] bg-[#111114] p-2.5 rounded border border-[#27272a] break-all">
                 {user.email}
               </div>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                أي تعديل تقوم به على المهام أو أقسام التقدم أو المشاكل يتم حفظه تلقائياً في حسابك في Supabase ومزامنته مع أي جهاز تفتحه منه.
+              <p className="text-[11px] text-[#a1a1aa] leading-relaxed">
+                أي تعديل على المهام أو البنود أو الملاحظات يتم حفظه ومزامنته في الوقت الحقيقي مع قاعدة بيانات Supabase.
               </p>
             </div>
 
-            <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center justify-between pt-1">
               <button
                 type="button"
                 onClick={() => setIsConfigModalOpen(true)}
-                className="text-xs text-slate-400 hover:text-white transition-colors"
+                className="text-xs text-[#a1a1aa] hover:text-[#f4f4f5] transition-colors cursor-pointer"
               >
-                إعدادات اتصال Supabase
+                إعدادات Supabase
               </button>
 
               <button
@@ -143,7 +142,7 @@ export const AuthModal: React.FC = () => {
                   await signOut();
                   setIsAuthModalOpen(false);
                 }}
-                className="px-4 py-2 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/50 text-rose-300 text-xs font-medium transition-colors cursor-pointer"
+                className="px-3 py-1.5 rounded-md bg-[#18181b] hover:bg-[#27272a] border border-[#ef4444]/30 text-[#ef4444] text-xs font-medium transition-colors cursor-pointer"
               >
                 تسجيل الخروج
               </button>
@@ -151,22 +150,19 @@ export const AuthModal: React.FC = () => {
           </div>
         ) : (
           /* Sign In / Sign Up Form */
-          <div className="space-y-4">
+          <div className="space-y-3.5">
             {!supabaseConfig.isConfigured && (
-              <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-800/50 flex items-start gap-2.5 text-xs text-amber-300">
-                <AlertCircle size={16} className="shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <p className="font-semibold">لم يتم إدخال مفاتيح Supabase بعد</p>
-                  <p className="text-amber-400/90 text-[11px]">
-                    يمكنك إضافتها عبر ملف <code className="bg-black/40 px-1 rounded">.env</code> أو إدخالها مباشرة بالنقر أدناه.
-                  </p>
+              <div className="p-2.5 rounded-md bg-[#18181b] border border-[#eab308]/40 flex items-start gap-2 text-xs text-[#eab308]">
+                <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <p className="font-medium">لم يتم إدخال مفاتيح Supabase بعد</p>
                   <button
                     type="button"
                     onClick={() => {
                       setIsAuthModalOpen(false);
                       setIsConfigModalOpen(true);
                     }}
-                    className="text-xs font-bold text-amber-200 underline mt-1 block"
+                    className="text-[11px] font-medium text-[#f4f4f5] underline cursor-pointer"
                   >
                     فتح نافذة ربط Supabase ←
                   </button>
@@ -174,8 +170,24 @@ export const AuthModal: React.FC = () => {
               </div>
             )}
 
+            {/* Quick Auto Login Button */}
+            <button
+              type="button"
+              onClick={async () => {
+                setLoading(true);
+                await signInAsDefaultUser();
+                setLoading(false);
+                setIsAuthModalOpen(false);
+              }}
+              disabled={loading}
+              className="w-full py-2 px-3 rounded-md bg-[#18181b] hover:bg-[#27272a] border border-[#27272a] text-[#f4f4f5] font-medium text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <Terminal size={13} className="text-[#8b5cf6]" />
+              <span>تسجيل الدخول التلقائي ({defaultEmail})</span>
+            </button>
+
             {/* Mode switch */}
-            <div className="grid grid-cols-2 gap-1 p-1 bg-[#161c27] rounded-xl border border-[#263143]">
+            <div className="grid grid-cols-2 gap-1 p-0.5 bg-[#18181b] rounded-md border border-[#27272a]">
               <button
                 type="button"
                 onClick={() => {
@@ -183,13 +195,13 @@ export const AuthModal: React.FC = () => {
                   setErrorMsg(null);
                   setSuccessMsg(null);
                 }}
-                className={`py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                className={`py-1.5 px-3 rounded text-xs font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
                   mode === 'signin'
-                    ? 'bg-red-600 text-white shadow-md'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-[#111114] text-[#f4f4f5] border border-[#27272a]'
+                    : 'text-[#a1a1aa] hover:text-[#f4f4f5]'
                 }`}
               >
-                <LogIn size={14} />
+                <LogIn size={13} />
                 <span>تسجيل الدخول</span>
               </button>
 
@@ -200,40 +212,40 @@ export const AuthModal: React.FC = () => {
                   setErrorMsg(null);
                   setSuccessMsg(null);
                 }}
-                className={`py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                className={`py-1.5 px-3 rounded text-xs font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
                   mode === 'signup'
-                    ? 'bg-red-600 text-white shadow-md'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-[#111114] text-[#f4f4f5] border border-[#27272a]'
+                    : 'text-[#a1a1aa] hover:text-[#f4f4f5]'
                 }`}
               >
-                <UserPlus size={14} />
+                <UserPlus size={13} />
                 <span>إنشاء حساب</span>
               </button>
             </div>
 
             {errorMsg && (
-              <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-800/50 flex items-center gap-2 text-xs text-rose-300">
-                <AlertCircle size={15} className="shrink-0" />
+              <div className="p-2.5 rounded-md bg-[#ef4444]/10 border border-[#ef4444]/20 flex items-center gap-2 text-xs text-[#ef4444]">
+                <AlertCircle size={14} className="shrink-0" />
                 <span>{errorMsg}</span>
               </div>
             )}
 
             {successMsg && (
-              <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-800/50 flex items-center gap-2 text-xs text-emerald-300">
-                <CheckCircle2 size={15} className="shrink-0" />
+              <div className="p-2.5 rounded-md bg-[#22c55e]/10 border border-[#22c55e]/20 flex items-center gap-2 text-xs text-[#22c55e]">
+                <CheckCircle2 size={14} className="shrink-0" />
                 <span>{successMsg}</span>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-3.5">
+            <form onSubmit={handleSubmit} className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
+                <label className="block text-xs font-medium text-[#a1a1aa] mb-1">
                   البريد الإلكتروني
                 </label>
                 <div className="relative">
                   <Mail
-                    size={15}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
+                    size={14}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#71717a] pointer-events-none"
                   />
                   <input
                     type="email"
@@ -241,19 +253,19 @@ export const AuthModal: React.FC = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
-                    className="w-full bg-[#18202d] border border-[#2a3446] rounded-lg pr-9 pl-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-hidden focus:border-red-500 font-mono"
+                    className="w-full bg-[#18181b] border border-[#27272a] rounded-md pr-9 pl-3 py-1.5 text-xs text-[#f4f4f5] placeholder-[#71717a] focus:outline-hidden focus:border-[#8b5cf6] font-mono"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
+                <label className="block text-xs font-medium text-[#a1a1aa] mb-1">
                   كلمة المرور
                 </label>
                 <div className="relative">
                   <Lock
-                    size={15}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
+                    size={14}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#71717a] pointer-events-none"
                   />
                   <input
                     type="password"
@@ -261,52 +273,42 @@ export const AuthModal: React.FC = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full bg-[#18202d] border border-[#2a3446] rounded-lg pr-9 pl-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-hidden focus:border-red-500 font-mono"
+                    className="w-full bg-[#18181b] border border-[#27272a] rounded-md pr-9 pl-3 py-1.5 text-xs text-[#f4f4f5] placeholder-[#71717a] focus:outline-hidden focus:border-[#8b5cf6] font-mono"
                   />
                 </div>
-              </div>
-
-              <div className="p-2.5 rounded-lg bg-[#141a24] border border-[#222c3d] text-[11px] text-slate-400 space-y-1">
-                <div className="flex items-center gap-1.5 text-slate-300 font-medium">
-                  <Sparkles size={13} className="text-amber-400" />
-                  <span>حماية البيانات والخصوصية:</span>
-                </div>
-                <p>
-                  نظام Row Level Security (RLS) يضمن أنك الوحيد القادر على الوصول إلى ماباتك وبياناتك البرمجية.
-                </p>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white font-medium text-xs flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
+                className="w-full py-2 px-3 rounded-md bg-[#8b5cf6] hover:bg-[#7c3aed] disabled:opacity-40 text-white font-medium text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               >
                 {loading ? (
                   <span>جاري المعالجة...</span>
                 ) : mode === 'signin' ? (
                   <>
-                    <LogIn size={15} />
+                    <LogIn size={14} />
                     <span>دخول ومزامنة البيانات</span>
                   </>
                 ) : (
                   <>
-                    <UserPlus size={15} />
+                    <UserPlus size={14} />
                     <span>إنشاء الحساب وبدء المزامنة</span>
                   </>
                 )}
               </button>
             </form>
 
-            <div className="pt-2 text-center">
+            <div className="pt-1 text-center">
               <button
                 type="button"
                 onClick={() => {
                   setIsAuthModalOpen(false);
                   setIsConfigModalOpen(true);
                 }}
-                className="text-[11px] text-slate-400 hover:text-slate-200 transition-colors"
+                className="text-[11px] text-[#71717a] hover:text-[#a1a1aa] transition-colors cursor-pointer"
               >
-                ⚙️ إعداد أو تغيير رابط ومفتاح Supabase
+                إعداد أو فحص رابط ومفتاح Supabase
               </button>
             </div>
           </div>

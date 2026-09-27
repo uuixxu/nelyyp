@@ -9,14 +9,9 @@ import {
   CheckCircle2,
   Circle,
   Layers,
-  Sparkles,
-  ChevronDown,
-  ChevronUp,
   FolderPlus,
-  Info,
 } from 'lucide-react';
 import { useDevTracker } from '../../context/DevTrackerContext';
-import { ProgressionCategory } from '../../types';
 
 export const ProgressionView: React.FC = () => {
   const {
@@ -105,30 +100,30 @@ export const ProgressionView: React.FC = () => {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2.5">
-            <Layers className="text-red-500" size={24} />
+          <h1 className="text-xl sm:text-2xl font-semibold text-[#f4f4f5] flex items-center gap-2">
+            <Layers className="text-[#8b5cf6]" size={22} />
             <span>مراحل تقدم تطوير الماب (Progression)</span>
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            قسم مشروعك إلى أركان رئيسية (الخريطة، اللعب، الواجهات، الأنظمة)، وتتبع نسبة إنجاز كل ركن تلقائياً.
+          <p className="text-xs text-[#a1a1aa] mt-0.5">
+            تتبع أركان المشروع الرئيسية (الخريطة، اللعب، الواجهات، الأنظمة) وحساب الجاهزية تلقائياً.
           </p>
         </div>
 
         <button
           onClick={() => setIsAddingCategoryModal(true)}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#161c27] hover:bg-[#202736] border border-[#2c3444] text-slate-200 text-xs font-medium transition-colors self-start sm:self-center cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#18181b] hover:bg-[#27272a] border border-[#27272a] text-[#f4f4f5] text-xs font-medium transition-colors self-start sm:self-center cursor-pointer"
         >
-          <FolderPlus size={15} className="text-red-400" />
-          <span>+ إضافة قسم تطوير جديد</span>
+          <FolderPlus size={14} className="text-[#8b5cf6]" />
+          <span>+ قسم جديد</span>
         </button>
       </div>
 
       {/* Categories Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {filteredCategories
           .filter((cat) => (cat as any).isVisible !== false)
           .map((cat) => {
@@ -141,47 +136,43 @@ export const ProgressionView: React.FC = () => {
             return (
               <div
                 key={cat.id}
-                className="bg-[#12161f] border border-[#21262d] rounded-xl overflow-hidden flex flex-col shadow-sm"
+                className="bg-[#111114] border border-[#27272a] rounded-lg overflow-hidden flex flex-col"
               >
                 {/* Category Header */}
-                <div className="p-5 border-b border-[#21262d] bg-[#141a24]/50">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 rounded-xl bg-red-600/10 text-red-400 border border-red-500/20">
-                        <Icon size={20} />
+                <div className="p-4 border-b border-[#27272a] bg-[#18181b]/40">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded-md bg-[#18181b] text-[#8b5cf6] border border-[#27272a]">
+                        <Icon size={16} />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="font-bold text-base text-white">{cat.nameAr}</h3>
-                          <span className="text-[11px] font-mono text-slate-400">
+                          <h3 className="font-semibold text-xs text-[#f4f4f5]">{cat.nameAr}</h3>
+                          <span className="text-[10px] font-mono text-[#71717a]">
                             {cat.name}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">
+                        <p className="text-[11px] text-[#a1a1aa] mt-0.5 line-clamp-1">
                           {cat.description}
                         </p>
                       </div>
                     </div>
 
                     <div className="text-left shrink-0">
-                      <div className="font-mono text-lg font-extrabold text-white">
+                      <div className="font-mono text-sm font-semibold text-[#f4f4f5]">
                         {percentage}%
                       </div>
-                      <div className="text-[11px] text-slate-400">
-                        {completed} / {total} بند
+                      <div className="text-[10px] text-[#71717a] font-mono">
+                        {completed}/{total} بند
                       </div>
                     </div>
                   </div>
 
                   {/* Progress Bar */}
-                  <div className="w-full bg-[#1b212c] h-2 rounded-full overflow-hidden mt-3 p-0.5">
+                  <div className="w-full bg-[#18181b] h-1.5 rounded-full overflow-hidden mt-2.5">
                     <div
-                      className={`h-full rounded-full transition-all duration-500 ${
-                        percentage === 100
-                          ? 'bg-emerald-400'
-                          : percentage >= 50
-                          ? 'bg-gradient-to-r from-amber-500 to-emerald-400'
-                          : 'bg-red-500'
+                      className={`h-full rounded-full transition-all duration-300 ${
+                        percentage === 100 ? 'bg-[#22c55e]' : 'bg-[#8b5cf6]'
                       }`}
                       style={{ width: `${percentage}%` }}
                     />
@@ -189,26 +180,26 @@ export const ProgressionView: React.FC = () => {
                 </div>
 
                 {/* Items List */}
-                <div className="p-4 flex-1 space-y-2 overflow-y-auto max-h-[380px]">
+                <div className="p-3 flex-1 space-y-1.5 overflow-y-auto max-h-[380px]">
                   {cat.items.length > 0 ? (
                     cat.items.map((item) => (
                       <div
                         key={item.id}
-                        className={`group flex items-start justify-between gap-3 p-2.5 rounded-lg border transition-all ${
+                        className={`group flex items-start justify-between gap-2.5 p-2 rounded-md border transition-colors ${
                           item.isCompleted
-                            ? 'bg-[#151c27]/40 border-emerald-950/40 opacity-75'
-                            : 'bg-[#161c27] border-[#222938] hover:border-slate-600'
+                            ? 'bg-[#18181b]/30 border-[#27272a] opacity-75'
+                            : 'bg-[#111114] border-[#27272a] hover:border-[#3f3f46]'
                         }`}
                       >
-                        <div className="flex items-start gap-2.5 flex-1 min-w-0">
+                        <div className="flex items-start gap-2 flex-1 min-w-0">
                           <button
                             onClick={() => toggleProgressionItem(cat.id, item.id)}
-                            className="mt-0.5 text-slate-400 hover:text-emerald-400 transition-colors shrink-0 cursor-pointer"
+                            className="mt-0.5 text-[#71717a] hover:text-[#22c55e] transition-colors shrink-0 cursor-pointer"
                           >
                             {item.isCompleted ? (
-                              <CheckCircle2 size={17} className="text-emerald-400" />
+                              <CheckCircle2 size={15} className="text-[#22c55e]" />
                             ) : (
-                              <Circle size={17} className="text-slate-500 group-hover:text-slate-300" />
+                              <Circle size={15} className="text-[#71717a] hover:text-[#f4f4f5]" />
                             )}
                           </button>
 
@@ -217,14 +208,14 @@ export const ProgressionView: React.FC = () => {
                               onClick={() => toggleProgressionItem(cat.id, item.id)}
                               className={`text-xs block cursor-pointer select-none ${
                                 item.isCompleted
-                                  ? 'text-slate-400 line-through'
-                                  : 'text-slate-200 font-medium'
+                                  ? 'text-[#71717a] line-through'
+                                  : 'text-[#f4f4f5] font-normal'
                               }`}
                             >
                               {item.title}
                             </span>
                             {item.notes && (
-                              <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">
+                              <p className="text-[11px] text-[#71717a] mt-0.5 line-clamp-1 font-mono">
                                 {item.notes}
                               </p>
                             )}
@@ -233,28 +224,28 @@ export const ProgressionView: React.FC = () => {
 
                         <button
                           onClick={() => deleteProgressionItem(cat.id, item.id)}
-                          className="opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-rose-400 rounded transition-all shrink-0 cursor-pointer"
+                          className="opacity-0 group-hover:opacity-100 p-1 text-[#71717a] hover:text-[#ef4444] rounded transition-all shrink-0 cursor-pointer"
                           title="حذف هذا البند"
                         >
-                          <Trash2 size={13} />
+                          <Trash2 size={12} />
                         </button>
                       </div>
                     ))
                   ) : (
-                    <div className="py-6 text-center text-xs text-slate-400">
-                      لا توجد بنود تحت هذا القسم بعد. اضغط أدناه لإضافة ما تم إنجازه أو ما هو باقٍ.
+                    <div className="py-6 text-center text-xs text-[#71717a]">
+                      لا توجد بنود مسجلة بعد.
                     </div>
                   )}
 
                   {/* Inline Add Item Form */}
-                  {isAddingHere ? (
-                    <div className="p-3 rounded-lg bg-[#18202d] border border-red-500/40 space-y-2 mt-2">
+                  {isAddingHere && (
+                    <div className="p-2.5 rounded-md bg-[#18181b] border border-[#27272a] space-y-2 mt-2">
                       <input
                         type="text"
                         value={newItemTitle}
                         onChange={(e) => setNewItemTitle(e.target.value)}
-                        placeholder="عنوان البند (مثال: برمجة حركة السلاح، إضاءة اللوبي...)"
-                        className="w-full bg-[#12161f] border border-[#2a3446] rounded-md px-3 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-hidden focus:border-red-500"
+                        placeholder="عنوان البند (مثال: برمجة حركة السلاح، الإضاءة...)"
+                        className="w-full bg-[#111114] border border-[#27272a] rounded px-2.5 py-1 text-xs text-[#f4f4f5] placeholder-[#71717a] focus:outline-hidden focus:border-[#8b5cf6]"
                         autoFocus
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') handleAddItem(cat.id);
@@ -264,10 +255,10 @@ export const ProgressionView: React.FC = () => {
                         type="text"
                         value={newItemNotes}
                         onChange={(e) => setNewItemNotes(e.target.value)}
-                        placeholder="ملاحظات اختيارية (تفاصيل السكربت أو الموديل)"
-                        className="w-full bg-[#12161f] border border-[#2a3446] rounded-md px-3 py-1.5 text-xs text-slate-300 placeholder-slate-400 focus:outline-hidden focus:border-red-500"
+                        placeholder="ملاحظات توثيقية اختيارية"
+                        className="w-full bg-[#111114] border border-[#27272a] rounded px-2.5 py-1 text-xs text-[#f4f4f5] placeholder-[#71717a] focus:outline-hidden focus:border-[#8b5cf6]"
                       />
-                      <div className="flex items-center justify-end gap-2 pt-1">
+                      <div className="flex items-center justify-end gap-1.5 pt-0.5">
                         <button
                           type="button"
                           onClick={() => {
@@ -275,35 +266,35 @@ export const ProgressionView: React.FC = () => {
                             setNewItemTitle('');
                             setNewItemNotes('');
                           }}
-                          className="px-2.5 py-1 text-xs text-slate-400 hover:text-white"
+                          className="px-2 py-0.5 text-xs text-[#71717a] hover:text-[#f4f4f5]"
                         >
                           إلغاء
                         </button>
                         <button
                           type="button"
                           onClick={() => handleAddItem(cat.id)}
-                          className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-xs font-medium cursor-pointer"
+                          className="px-2.5 py-1 bg-[#8b5cf6] hover:bg-[#7c3aed] text-white rounded text-xs font-medium cursor-pointer"
                         >
                           حفظ البند
                         </button>
                       </div>
                     </div>
-                  ) : null}
+                  )}
                 </div>
 
                 {/* Footer Action */}
                 {!isAddingHere && (
-                  <div className="p-3 border-t border-[#21262d] bg-[#0f141d]">
+                  <div className="p-2.5 border-t border-[#27272a] bg-[#09090b]">
                     <button
                       onClick={() => {
                         setActiveAddingCategory(cat.id);
                         setNewItemTitle('');
                         setNewItemNotes('');
                       }}
-                      className="w-full py-2 px-3 rounded-lg border border-dashed border-[#2b3342] hover:border-red-500/50 hover:bg-red-500/5 text-slate-400 hover:text-red-400 text-xs font-medium flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                      className="w-full py-1.5 px-2 rounded border border-dashed border-[#27272a] hover:border-[#8b5cf6]/50 text-[#a1a1aa] hover:text-[#f4f4f5] text-xs font-normal flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                     >
-                      <Plus size={14} />
-                      <span>إضافة مهمة / بند جديد لهذا القسم</span>
+                      <Plus size={13} />
+                      <span>إضافة بند لهذا القسم</span>
                     </button>
                   </div>
                 )}
@@ -314,24 +305,24 @@ export const ProgressionView: React.FC = () => {
 
       {/* Modal: Add New Progression Category */}
       {isAddingCategoryModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
-          <div className="bg-[#12161f] border border-[#21262d] rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-[#21262d] pb-3">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <FolderPlus size={18} className="text-red-500" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="bg-[#111114] border border-[#27272a] rounded-lg w-full max-w-md p-5 shadow-2xl space-y-3.5">
+            <div className="flex items-center justify-between border-b border-[#27272a] pb-3">
+              <h3 className="text-sm font-semibold text-[#f4f4f5] flex items-center gap-2">
+                <FolderPlus size={16} className="text-[#8b5cf6]" />
                 <span>إضافة قسم تطوير مخصص</span>
               </h3>
               <button
                 onClick={() => setIsAddingCategoryModal(false)}
-                className="text-slate-400 hover:text-white text-sm"
+                className="text-[#71717a] hover:text-[#f4f4f5] text-xs"
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleCreateCategory} className="space-y-3.5">
+            <form onSubmit={handleCreateCategory} className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
+                <label className="block text-xs font-medium text-[#a1a1aa] mb-1">
                   اسم القسم بالعربية
                 </label>
                 <input
@@ -340,12 +331,12 @@ export const ProgressionView: React.FC = () => {
                   value={newCatNameAr}
                   onChange={(e) => setNewCatNameAr(e.target.value)}
                   placeholder="مثال: المؤثرات الصوتية والموسيقى، المتجر، الأحداث"
-                  className="w-full bg-[#18202d] border border-[#283244] rounded-lg px-3 py-2 text-xs text-white placeholder-slate-400 focus:outline-hidden focus:border-red-500"
+                  className="w-full bg-[#18181b] border border-[#27272a] rounded px-3 py-1.5 text-xs text-[#f4f4f5] placeholder-[#71717a] focus:outline-hidden focus:border-[#8b5cf6]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
+                <label className="block text-xs font-medium text-[#a1a1aa] mb-1">
                   الاسم بالإنجليزية (اختياري)
                 </label>
                 <input
@@ -353,34 +344,34 @@ export const ProgressionView: React.FC = () => {
                   value={newCatNameEn}
                   onChange={(e) => setNewCatNameEn(e.target.value)}
                   placeholder="e.g. Audio & SFX, Economy, Events"
-                  className="w-full bg-[#18202d] border border-[#283244] rounded-lg px-3 py-2 text-xs text-white placeholder-slate-400 focus:outline-hidden focus:border-red-500 font-mono"
+                  className="w-full bg-[#18181b] border border-[#27272a] rounded px-3 py-1.5 text-xs text-[#f4f4f5] placeholder-[#71717a] focus:outline-hidden focus:border-[#8b5cf6] font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
+                <label className="block text-xs font-medium text-[#a1a1aa] mb-1">
                   وصف موجز لهذا القسم
                 </label>
                 <textarea
                   rows={2}
                   value={newCatDesc}
                   onChange={(e) => setNewCatDesc(e.target.value)}
-                  placeholder="ما الذي يشمله هذا القسم في تطوير ماب Roblox؟"
-                  className="w-full bg-[#18202d] border border-[#283244] rounded-lg px-3 py-2 text-xs text-white placeholder-slate-400 focus:outline-hidden focus:border-red-500 resize-none"
+                  placeholder="ما الذي يشمله هذا القسم في تطوير الماب؟"
+                  className="w-full bg-[#18181b] border border-[#27272a] rounded px-3 py-1.5 text-xs text-[#f4f4f5] placeholder-[#71717a] focus:outline-hidden focus:border-[#8b5cf6] resize-none"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#21262d]">
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#27272a]">
                 <button
                   type="button"
                   onClick={() => setIsAddingCategoryModal(false)}
-                  className="px-4 py-2 text-xs text-slate-400 hover:text-white"
+                  className="px-3 py-1 text-xs text-[#a1a1aa] hover:text-[#f4f4f5]"
                 >
                   إلغاء
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                  className="px-3 py-1 bg-[#8b5cf6] hover:bg-[#7c3aed] text-white rounded text-xs font-medium transition-colors cursor-pointer"
                 >
                   إنشاء القسم
                 </button>

@@ -15,9 +15,17 @@ import {
   IdeaImpact,
   BugSeverity,
   BugStatus,
+  DevNote,
 } from '../types';
 import { initialTrackerData } from '../data/initialData';
-import { getSupabaseClient, getSupabaseConfig, saveSupabaseCustomConfig, SupabaseConfig } from '../lib/supabase';
+import {
+  getSupabaseClient,
+  getSupabaseConfig,
+  saveSupabaseCustomConfig,
+  SupabaseConfig,
+  DEFAULT_DEV_EMAIL,
+  DEFAULT_DEV_PASSWORD,
+} from '../lib/supabase';
 import { User, Session } from '@supabase/supabase-js';
 
 const STORAGE_KEY = 'roblox_dev_tracker_v1';
@@ -27,8 +35,8 @@ export type SyncStatus = 'synced' | 'syncing' | 'offline' | 'error' | 'not_confi
 
 interface DevTrackerContextType {
   data: DevTrackerData;
-  activeTab: 'dashboard' | 'progression' | 'tasks' | 'ideas' | 'bugs';
-  setActiveTab: (tab: 'dashboard' | 'progression' | 'tasks' | 'ideas' | 'bugs') => void;
+  activeTab: 'dashboard' | 'progression' | 'tasks' | 'ideas' | 'bugs' | 'notes';
+  setActiveTab: (tab: 'dashboard' | 'progression' | 'tasks' | 'ideas' | 'bugs' | 'notes') => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   isQuickAddOpen: boolean;
@@ -53,6 +61,8 @@ interface DevTrackerContextType {
   setIsConfigModalOpen: (open: boolean) => void;
   signUpWithEmail: (email: string, pass: string) => Promise<{ success: boolean; error?: string; confirmationRequired?: boolean }>;
   signInWithEmail: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
+  signInAsDefaultUser: () => Promise<void>;
+  defaultEmail: string;
   signOut: () => Promise<void>;
   updateSupabaseCredentials: (url: string, key: string) => void;
   forceSyncToCloud: () => Promise<void>;
@@ -86,6 +96,11 @@ interface DevTrackerContextType {
   updateBug: (id: string, updates: Partial<Bug>) => void;
   deleteBug: (id: string) => void;
   toggleBugStatus: (id: string) => void;
+
+  // Notes
+  addNote: (note: Omit<DevNote, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  updateNote: (id: string, updates: Partial<DevNote>) => void;
+  deleteNote: (id: string) => void;
   
   // Storage & Export/Import
   exportDataJson: () => void;
@@ -102,6 +117,7 @@ interface DevTrackerContextType {
     openBugsCount: number;
     criticalBugsCount: number;
     totalIdeasCount: number;
+    totalNotesCount: number;
     activeTask: Task | null;
     progressionStats: { [categoryId: string]: { total: number; completed: number; percentage: number } };
   };
@@ -126,7 +142,7 @@ export const DevTrackerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     return initialTrackerData;
   });
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'progression' | 'tasks' | 'ideas' | 'bugs'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'progression' | 'tasks' | 'ideas' | 'bugs' | 'notes'>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [isProjectSettingsOpen, setIsProjectSettingsOpen] = useState(false);
@@ -176,6 +192,12 @@ export const DevTrackerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       if (b && b.id) bugMap.set(b.id, b);
     });
 
+    // Deduplicate notes by unique id
+    const noteMap = new Map<string, DevNote>();
+    (incoming.notes || []).forEach((n) => {
+      if (n && n.id) noteMap.set(n.id, n);
+    });
+
     // Deduplicate progression items by category and item id
     const prog = (incoming.progression || []).map((cat) => {
       const itemMap = new Map<string, ProgressionItem>();
@@ -199,6 +221,7 @@ export const DevTrackerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       tasks: Array.from(taskMap.values()),
       ideas: Array.from(ideaMap.values()),
       bugs: Array.from(bugMap.values()),
+      notes: Array.from(noteMap.values()),
       progression: prog,
       activities: Array.from(actMap.values()).slice(0, 30),
     };
@@ -243,16 +266,79 @@ export const DevTrackerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       return;
     }
 
-    // Get current session
-    client.auth.getSession().then(({ data: sessionData, error }) => {
+    // Helper to auto-sign in default user if not logged in
+    const ensureDefaultUserSignedIn = async (supabaseClient: any) => {
+      try {
+        setIsAuthLoading(true);
+        console.log('[Auth] Auto-signing in default user:', DEFAULT_DEV_EMAIL);
+
+        const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({
+          email: DEFAULT_DEV_EMAIL,
+          password: DEFAULT_DEV_PASSWORD,
+        });
+
+        if (signInData?.session?.user) {
+          setSession(signInData.session);
+          setUser(signInData.session.user);
+          setIsAuthLoading(false);
+          await fetchUserDataFromCloud(signInData.session.user.id);
+          return;
+        }
+
+        // If user doesn't exist yet, attempt signup
+        if (signInError) {
+          console.log('[Auth] Default user not found, attempting registration...');
+          const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({
+            email: DEFAULT_DEV_EMAIL,
+            password: DEFAULT_DEV_PASSWORD,
+          });
+
+          if (signUpData?.session?.user) {
+            setSession(signUpData.session);
+            setUser(signUpData.session.user);
+            setIsAuthLoading(false);
+            await fetchUserDataFromCloud(signUpData.session.user.id);
+            return;
+          }
+
+          // Try signing in again if signup was created
+          const { data: retrySignIn } = await supabaseClient.auth.signInWithPassword({
+            email: DEFAULT_DEV_EMAIL,
+            password: DEFAULT_DEV_PASSWORD,
+          });
+
+          if (retrySignIn?.session?.user) {
+            setSession(retrySignIn.session);
+            setUser(retrySignIn.session.user);
+            setIsAuthLoading(false);
+            await fetchUserDataFromCloud(retrySignIn.session.user.id);
+            return;
+          }
+
+          if (signUpError) {
+            console.warn('[Auth] Auto signup note:', signUpError.message);
+          }
+        }
+      } catch (err) {
+        console.error('[Auth] Error during auto sign-in:', err);
+      } finally {
+        setIsAuthLoading(false);
+      }
+    };
+
+    // Get current session or auto-sign in
+    client.auth.getSession().then(async ({ data: sessionData, error }) => {
       if (error) {
         console.error('Error fetching Supabase session:', error);
       }
-      setSession(sessionData?.session ?? null);
-      setUser(sessionData?.session?.user ?? null);
-      setIsAuthLoading(false);
-      if (!sessionData?.session?.user) {
-        setSyncStatus('anonymous');
+      if (sessionData?.session?.user) {
+        setSession(sessionData.session);
+        setUser(sessionData.session.user);
+        setIsAuthLoading(false);
+        await fetchUserDataFromCloud(sessionData.session.user.id);
+      } else {
+        // Automatically sign in for everyone with default project credentials
+        await ensureDefaultUserSignedIn(client);
       }
     });
 
@@ -599,6 +685,45 @@ export const DevTrackerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setSyncStatus('anonymous');
   };
 
+  const signInAsDefaultUser = async () => {
+    const client = getSupabaseClient();
+    if (!client) return;
+    try {
+      setIsAuthLoading(true);
+      const { data: signInData, error: signInError } = await client.auth.signInWithPassword({
+        email: DEFAULT_DEV_EMAIL,
+        password: DEFAULT_DEV_PASSWORD,
+      });
+
+      if (signInData?.session?.user) {
+        setSession(signInData.session);
+        setUser(signInData.session.user);
+        await fetchUserDataFromCloud(signInData.session.user.id);
+        return;
+      }
+
+      if (signInError) {
+        await client.auth.signUp({
+          email: DEFAULT_DEV_EMAIL,
+          password: DEFAULT_DEV_PASSWORD,
+        });
+        const { data: retry } = await client.auth.signInWithPassword({
+          email: DEFAULT_DEV_EMAIL,
+          password: DEFAULT_DEV_PASSWORD,
+        });
+        if (retry?.session?.user) {
+          setSession(retry.session);
+          setUser(retry.session.user);
+          await fetchUserDataFromCloud(retry.session.user.id);
+        }
+      }
+    } catch (e) {
+      console.error('Error signing in as default user:', e);
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
+
   const updateSupabaseCredentials = (url: string, key: string) => {
     saveSupabaseCustomConfig(url, key);
     const updated = getSupabaseConfig();
@@ -904,6 +1029,37 @@ export const DevTrackerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
+  // Notes
+  const addNote = (noteData: Omit<DevNote, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const now = new Date().toISOString();
+    const newNote: DevNote = {
+      ...noteData,
+      id: 'note-' + Date.now(),
+      createdAt: now,
+      updatedAt: now,
+    };
+    setData((prev) => ({
+      ...prev,
+      notes: [newNote, ...(prev.notes || [])],
+    }));
+    addActivity('note_created', `تم حفظ ملاحظة برمجية جديدة: ${newNote.title}`);
+  };
+
+  const updateNote = (id: string, updates: Partial<DevNote>) => {
+    const now = new Date().toISOString();
+    setData((prev) => ({
+      ...prev,
+      notes: (prev.notes || []).map((n) => (n.id === id ? { ...n, ...updates, updatedAt: now } : n)),
+    }));
+  };
+
+  const deleteNote = (id: string) => {
+    setData((prev) => ({
+      ...prev,
+      notes: (prev.notes || []).filter((n) => n.id !== id),
+    }));
+  };
+
   // Export / Import
   const exportDataJson = () => {
     const jsonStr = JSON.stringify(data, null, 2);
@@ -993,6 +1149,7 @@ export const DevTrackerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const openBugsCount = data.bugs.filter((b) => b.status === 'open').length;
     const criticalBugsCount = data.bugs.filter((b) => b.status === 'open' && (b.severity === 'critical' || b.severity === 'high')).length;
     const totalIdeasCount = data.ideas.length;
+    const totalNotesCount = (data.notes || []).length;
 
     const activeTask =
       data.tasks.find((t) => t.id === data.project.currentActiveTaskId) ||
@@ -1007,6 +1164,7 @@ export const DevTrackerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       openBugsCount,
       criticalBugsCount,
       totalIdeasCount,
+      totalNotesCount,
       activeTask,
       progressionStats,
     };
@@ -1040,6 +1198,8 @@ export const DevTrackerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         setIsConfigModalOpen,
         signUpWithEmail,
         signInWithEmail,
+        signInAsDefaultUser,
+        defaultEmail: DEFAULT_DEV_EMAIL,
         signOut,
         updateSupabaseCredentials,
         forceSyncToCloud,
@@ -1063,6 +1223,9 @@ export const DevTrackerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         updateBug,
         deleteBug,
         toggleBugStatus,
+        addNote,
+        updateNote,
+        deleteNote,
         exportDataJson,
         importDataJson,
         resetToSampleData,

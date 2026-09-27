@@ -3,7 +3,7 @@ import {
   CheckSquare,
   Bug as BugIcon,
   Lightbulb,
-  Sparkles,
+  FileText,
   X,
   Zap,
 } from 'lucide-react';
@@ -17,10 +17,11 @@ export const QuickAddModal: React.FC = () => {
     addTask,
     addBug,
     addIdea,
+    addNote,
     data,
   } = useDevTracker();
 
-  const [activeType, setActiveType] = useState<'task' | 'bug' | 'idea'>('task');
+  const [activeType, setActiveType] = useState<'task' | 'bug' | 'idea' | 'note'>('task');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<TaskCategory>('gameplay');
@@ -48,7 +49,7 @@ export const QuickAddModal: React.FC = () => {
         description: description.trim(),
         severity: bugSeverity,
         status: 'open',
-        foundInVersion: data.project.gameVersion || 'v0.1.0',
+        foundInVersion: data.project.gameVersion || 'v0.0.1 Alpha',
       });
     } else if (activeType === 'idea') {
       addIdea({
@@ -57,6 +58,13 @@ export const QuickAddModal: React.FC = () => {
         category: 'Quick Thought',
         status: 'new',
         impact: ideaImpact,
+      });
+    } else if (activeType === 'note') {
+      addNote({
+        title: title.trim(),
+        content: description.trim() || '-- Luau snippet / note',
+        category: 'general',
+        tags: ['Quick'],
       });
     }
 
@@ -67,75 +75,88 @@ export const QuickAddModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 animate-in fade-in duration-150">
-      <div className="bg-[#12161f] border border-[#21262d] rounded-2xl w-full max-w-lg p-5 shadow-2xl space-y-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4">
+      <div className="bg-[#111114] border border-[#27272a] rounded-lg w-full max-w-lg p-5 shadow-lg space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#21262d] pb-3">
+        <div className="flex items-center justify-between border-b border-[#27272a] pb-3">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-red-600/15 text-red-400">
-              <Zap size={18} />
+            <div className="p-1 rounded bg-[#18181b] text-[#8b5cf6] border border-[#27272a]">
+              <Zap size={14} />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">إضافة سريعة (Quick Add)</h3>
-              <p className="text-[11px] text-slate-400">
-                سجل أفكارك أو مهامك أو المشاكل بسرعة دون مقاطعة تركيزك.
+              <h3 className="text-sm font-semibold text-[#f4f4f5]">إضافة سريعة (Quick Add)</h3>
+              <p className="text-[11px] text-[#a1a1aa]">
+                سجل أفكارك أو مهامك أو المشاكل بسرعة دون مقاطعة تركيزك في التطوير.
               </p>
             </div>
           </div>
           <button
             onClick={() => setIsQuickAddOpen(false)}
-            className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+            className="p-1 text-[#71717a] hover:text-[#f4f4f5] rounded hover:bg-[#18181b] transition-colors cursor-pointer"
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 
-        {/* Type Selector (Task / Bug / Idea) */}
-        <div className="grid grid-cols-3 gap-2 p-1 bg-[#161c27] rounded-xl border border-[#263143]">
+        {/* Type Selector (Task / Bug / Idea / Note) */}
+        <div className="grid grid-cols-4 gap-1.5 p-1 bg-[#18181b] rounded-md border border-[#27272a]">
           <button
             type="button"
             onClick={() => setActiveType('task')}
-            className={`py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+            className={`py-1.5 px-2 rounded text-xs font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
               activeType === 'task'
-                ? 'bg-red-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-[#111114] text-[#f4f4f5] border border-[#27272a]'
+                : 'text-[#a1a1aa] hover:text-[#f4f4f5]'
             }`}
           >
-            <CheckSquare size={14} />
-            <span>مهمة (Task)</span>
+            <CheckSquare size={13} className="text-[#8b5cf6]" />
+            <span>مهمة</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveType('bug')}
-            className={`py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+            className={`py-1.5 px-2 rounded text-xs font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
               activeType === 'bug'
-                ? 'bg-rose-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-[#111114] text-[#f4f4f5] border border-[#27272a]'
+                : 'text-[#a1a1aa] hover:text-[#f4f4f5]'
             }`}
           >
-            <BugIcon size={14} />
-            <span>مشكلة (Bug)</span>
+            <BugIcon size={13} className="text-[#ef4444]" />
+            <span>مشكلة</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveType('idea')}
-            className={`py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+            className={`py-1.5 px-2 rounded text-xs font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
               activeType === 'idea'
-                ? 'bg-indigo-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-[#111114] text-[#f4f4f5] border border-[#27272a]'
+                : 'text-[#a1a1aa] hover:text-[#f4f4f5]'
             }`}
           >
-            <Lightbulb size={14} />
-            <span>فكرة (Idea)</span>
+            <Lightbulb size={13} className="text-[#eab308]" />
+            <span>فكرة</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveType('note')}
+            className={`py-1.5 px-2 rounded text-xs font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+              activeType === 'note'
+                ? 'bg-[#111114] text-[#f4f4f5] border border-[#27272a]'
+                : 'text-[#a1a1aa] hover:text-[#f4f4f5]'
+            }`}
+          >
+            <FileText size={13} className="text-[#a1a1aa]" />
+            <span>ملاحظة</span>
           </button>
         </div>
 
         {/* Quick Form */}
-        <form onSubmit={handleSubmit} className="space-y-3.5">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1">
+            <label className="block text-xs font-medium text-[#a1a1aa] mb-1">
               العنوان *
             </label>
             <input
@@ -149,14 +170,16 @@ export const QuickAddModal: React.FC = () => {
                   ? 'مثال: ربط صوت القفز مع أنيميشن القفز'
                   : activeType === 'bug'
                   ? 'مثال: اختفاء سلاح اللاعب بعد الموت'
-                  : 'مثال: إضافة صناديق هدايا مجانية كل 10 دقائق'
+                  : activeType === 'idea'
+                  ? 'مثال: إضافة نظام تصفيات ومواسم شهرية'
+                  : 'مثال: دالة حساب نسبة ضرر الضربات الحرجة'
               }
-              className="w-full bg-[#18202d] border border-[#2a3446] rounded-lg px-3 py-2 text-xs text-white placeholder-slate-400 focus:outline-hidden focus:border-red-500"
+              className="w-full bg-[#18181b] border border-[#27272a] rounded-md px-3 py-1.5 text-xs text-[#f4f4f5] placeholder-[#71717a] focus:outline-hidden focus:border-[#8b5cf6]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1">
+            <label className="block text-xs font-medium text-[#a1a1aa] mb-1">
               ملاحظات أو تفاصيل موجزة
             </label>
             <textarea
@@ -164,7 +187,7 @@ export const QuickAddModal: React.FC = () => {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="اكتب أية تفاصيل سريعة..."
-              className="w-full bg-[#18202d] border border-[#2a3446] rounded-lg px-3 py-2 text-xs text-white placeholder-slate-400 focus:outline-hidden focus:border-red-500 resize-none"
+              className="w-full bg-[#18181b] border border-[#27272a] rounded-md px-3 py-1.5 text-xs text-[#f4f4f5] placeholder-[#71717a] focus:outline-hidden focus:border-[#8b5cf6] resize-none"
             />
           </div>
 
@@ -172,13 +195,13 @@ export const QuickAddModal: React.FC = () => {
           {activeType === 'task' && (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
+                <label className="block text-xs font-medium text-[#a1a1aa] mb-1">
                   القسم
                 </label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value as TaskCategory)}
-                  className="w-full bg-[#18202d] border border-[#2a3446] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-hidden"
+                  className="w-full bg-[#18181b] border border-[#27272a] rounded-md px-3 py-1.5 text-xs text-[#f4f4f5] focus:outline-hidden focus:border-[#8b5cf6]"
                 >
                   <option value="gameplay">أسلوب اللعب (Gameplay)</option>
                   <option value="map">الخريطة والبيئة (Map)</option>
@@ -190,13 +213,13 @@ export const QuickAddModal: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
+                <label className="block text-xs font-medium text-[#a1a1aa] mb-1">
                   الأولوية
                 </label>
                 <select
                   value={priority}
                   onChange={(e) => setPriority(e.target.value as TaskPriority)}
-                  className="w-full bg-[#18202d] border border-[#2a3446] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-hidden"
+                  className="w-full bg-[#18181b] border border-[#27272a] rounded-md px-3 py-1.5 text-xs text-[#f4f4f5] focus:outline-hidden focus:border-[#8b5cf6]"
                 >
                   <option value="low">منخفضة</option>
                   <option value="medium">متوسطة</option>
@@ -209,13 +232,13 @@ export const QuickAddModal: React.FC = () => {
 
           {activeType === 'bug' && (
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">
+              <label className="block text-xs font-medium text-[#a1a1aa] mb-1">
                 درجة الخطورة
               </label>
               <select
                 value={bugSeverity}
                 onChange={(e) => setBugSeverity(e.target.value as BugSeverity)}
-                className="w-full bg-[#18202d] border border-[#2a3446] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-hidden"
+                className="w-full bg-[#18181b] border border-[#27272a] rounded-md px-3 py-1.5 text-xs text-[#f4f4f5] focus:outline-hidden focus:border-[#8b5cf6]"
               >
                 <option value="critical">حرجة جداً (توقف الماب)</option>
                 <option value="high">عالية</option>
@@ -227,13 +250,13 @@ export const QuickAddModal: React.FC = () => {
 
           {activeType === 'idea' && (
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">
+              <label className="block text-xs font-medium text-[#a1a1aa] mb-1">
                 مستوى التأثير المتوقع
               </label>
               <select
                 value={ideaImpact}
                 onChange={(e) => setIdeaImpact(e.target.value as IdeaImpact)}
-                className="w-full bg-[#18202d] border border-[#2a3446] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-hidden"
+                className="w-full bg-[#18181b] border border-[#27272a] rounded-md px-3 py-1.5 text-xs text-[#f4f4f5] focus:outline-hidden focus:border-[#8b5cf6]"
               >
                 <option value="high">تأثير قوي (High Impact)</option>
                 <option value="medium">تأثير متوسط</option>
@@ -242,17 +265,17 @@ export const QuickAddModal: React.FC = () => {
             </div>
           )}
 
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#21262d]">
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#27272a]">
             <button
               type="button"
               onClick={() => setIsQuickAddOpen(false)}
-              className="px-4 py-2 text-xs text-slate-400 hover:text-white"
+              className="px-3 py-1.5 text-xs text-[#a1a1aa] hover:text-[#f4f4f5] rounded hover:bg-[#18181b] transition-colors cursor-pointer"
             >
               إلغاء
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-medium transition-colors cursor-pointer"
+              className="px-3 py-1.5 bg-[#8b5cf6] hover:bg-[#7c3aed] text-white rounded-md text-xs font-medium transition-colors cursor-pointer"
             >
               حفظ فوري
             </button>

@@ -8,10 +8,7 @@ import {
   Check,
   CheckCircle2,
   AlertCircle,
-  RefreshCw,
-  ExternalLink,
   Code2,
-  ShieldCheck,
   UploadCloud,
   Zap,
   Radio,
@@ -30,7 +27,6 @@ export const SupabaseConfigModal: React.FC = () => {
     user,
     isRealtimeConnected,
     migrateLocalDataToSupabase,
-    hasLocalDataToMigrate,
     setIsAuthModalOpen,
   } = useDevTracker();
 
@@ -39,6 +35,7 @@ export const SupabaseConfigModal: React.FC = () => {
   const [copiedSql, setCopiedSql] = useState(false);
   const [copiedRealtimeSql, setCopiedRealtimeSql] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [migrationSuccess, setMigrationSuccess] = useState(false);
 
   if (!isConfigModalOpen) return null;
 
@@ -62,45 +59,45 @@ export const SupabaseConfigModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4 animate-in fade-in duration-150">
-      <div className="bg-[#12161f] border border-[#21262d] rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto p-6 shadow-2xl space-y-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4">
+      <div className="bg-[#111114] border border-[#27272a] rounded-lg w-full max-w-xl max-h-[90vh] overflow-y-auto p-5 shadow-lg space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#21262d] pb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-emerald-600/15 text-emerald-400 border border-emerald-500/25">
-              <Database size={18} />
+        <div className="flex items-center justify-between border-b border-[#27272a] pb-3">
+          <div className="flex items-center gap-2">
+            <div className="p-1 rounded bg-[#18181b] text-[#8b5cf6] border border-[#27272a]">
+              <Database size={14} />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">إعداد وربط قاعدة بيانات Supabase Realtime</h3>
-              <p className="text-[11px] text-slate-400">
+              <h3 className="text-sm font-semibold text-[#f4f4f5]">إعداد وربط قاعدة بيانات Supabase Realtime</h3>
+              <p className="text-[11px] text-[#a1a1aa]">
                 مزامنة فورية بدون Refresh بين الكمبيوتر والجوال
               </p>
             </div>
           </div>
           <button
             onClick={() => setIsConfigModalOpen(false)}
-            className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+            className="p-1 text-[#71717a] hover:text-[#f4f4f5] rounded hover:bg-[#18181b] transition-colors cursor-pointer"
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 
         {/* Current Connection Status Indicator */}
-        <div className="p-3.5 rounded-xl bg-[#161d28] border border-[#263346] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+        <div className="p-3 rounded-lg bg-[#18181b] border border-[#27272a] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2.5">
             <div
-              className={`w-3 h-3 rounded-full ${
+              className={`w-2.5 h-2.5 rounded-full ${
                 syncStatus === 'synced'
-                  ? 'bg-emerald-400 animate-pulse'
+                  ? 'bg-[#22c55e]'
                   : syncStatus === 'syncing'
-                  ? 'bg-amber-400 animate-spin'
+                  ? 'bg-[#eab308] animate-spin'
                   : syncStatus === 'not_configured'
-                  ? 'bg-slate-500'
-                  : 'bg-rose-400'
+                  ? 'bg-[#71717a]'
+                  : 'bg-[#ef4444]'
               }`}
             />
             <div>
-              <span className="font-semibold text-white block">
+              <span className="font-medium text-[#f4f4f5] block">
                 {syncStatus === 'synced'
                   ? 'متصل ومتزامن بنجاح مع Supabase'
                   : syncStatus === 'syncing'
@@ -112,19 +109,19 @@ export const SupabaseConfigModal: React.FC = () => {
                   : 'تنبيه: يتطلب فحص الاتصال أو إنشاء الجدول'}
               </span>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-[11px] text-slate-400">
-                  {user ? `المستخدم: ${user.email}` : 'لم يتم تسجيل الدخول'}
+                <span className="text-[11px] font-mono text-[#a1a1aa]">
+                  {user ? `الحساب: ${user.email}` : 'غير مسجل الدخول'}
                 </span>
-                <span aria-hidden="true" className="text-slate-600">·</span>
+                <span aria-hidden="true" className="text-[#3f3f46]">·</span>
                 <span
-                  className={`text-[10px] font-mono px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                  className={`text-[10px] font-mono px-1.5 py-0.2 rounded border flex items-center gap-1 ${
                     isRealtimeConnected
-                      ? 'text-emerald-400 bg-emerald-950/60 border border-emerald-800/60'
-                      : 'text-amber-400 bg-amber-950/60 border border-amber-800/60'
+                      ? 'text-[#22c55e] bg-[#22c55e]/10 border-[#22c55e]/20'
+                      : 'text-[#eab308] bg-[#eab308]/10 border-[#eab308]/20'
                   }`}
                 >
-                  <Radio size={10} className={isRealtimeConnected ? 'animate-pulse' : ''} />
-                  <span>{isRealtimeConnected ? 'Realtime: متصل لحظياً (Live)' : 'Realtime: بانتظار الاتصال'}</span>
+                  <Radio size={9} className={isRealtimeConnected ? 'animate-pulse' : ''} />
+                  <span>{isRealtimeConnected ? 'Realtime: LIVE' : 'Realtime: Waiting'}</span>
                 </span>
               </div>
             </div>
@@ -136,7 +133,7 @@ export const SupabaseConfigModal: React.FC = () => {
                 setIsConfigModalOpen(false);
                 setIsAuthModalOpen(true);
               }}
-              className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white font-medium text-xs shadow-xs cursor-pointer self-start sm:self-auto shrink-0"
+              className="px-2.5 py-1 rounded-md bg-[#8b5cf6] hover:bg-[#7c3aed] text-white font-medium text-xs cursor-pointer self-start sm:self-auto shrink-0 transition-colors"
             >
               تسجيل الدخول
             </button>
@@ -144,40 +141,40 @@ export const SupabaseConfigModal: React.FC = () => {
         </div>
 
         {syncError && (
-          <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-800/50 flex items-start gap-2.5 text-xs text-rose-300">
-            <AlertCircle size={16} className="shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <span className="font-semibold block">ملاحظة من قاعدة البيانات:</span>
+          <div className="p-2.5 rounded-md bg-[#ef4444]/10 border border-[#ef4444]/20 flex items-start gap-2 text-xs text-[#ef4444]">
+            <AlertCircle size={14} className="shrink-0 mt-0.5" />
+            <div className="space-y-0.5">
+              <span className="font-medium block">ملاحظة من قاعدة البيانات:</span>
               <p className="text-[11px] leading-relaxed">{syncError}</p>
             </div>
           </div>
         )}
 
         {/* Realtime Quick Activation Notice (For existing database) */}
-        <div className="p-4 rounded-xl bg-gradient-to-r from-red-950/30 via-[#18202d] to-[#12161f] border border-red-500/30 space-y-2.5">
+        <div className="p-3 rounded-lg bg-[#18181b] border border-[#27272a] space-y-2">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Zap size={16} className="text-amber-400" />
-              <span className="text-xs font-bold text-white">
+            <div className="flex items-center gap-1.5">
+              <Zap size={14} className="text-[#8b5cf6]" />
+              <span className="text-xs font-medium text-[#f4f4f5]">
                 تفعيل الـ Realtime للجدول الحالي في Supabase (خطوة واحدة فقط)
               </span>
             </div>
             <button
               type="button"
               onClick={handleCopyRealtimeSql}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-red-600 hover:bg-red-500 text-white text-[11px] font-mono transition-colors cursor-pointer shadow-xs"
+              className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#111114] hover:bg-[#27272a] border border-[#27272a] text-[#f4f4f5] text-[11px] font-mono transition-colors cursor-pointer"
             >
-              {copiedRealtimeSql ? <Check size={12} /> : <Copy size={12} />}
-              <span>{copiedRealtimeSql ? 'تم النسخ!' : 'نسخ كود Realtime'}</span>
+              {copiedRealtimeSql ? <Check size={11} className="text-[#22c55e]" /> : <Copy size={11} />}
+              <span>{copiedRealtimeSql ? 'تم النسخ' : 'نسخ الكود'}</span>
             </button>
           </div>
 
-          <p className="text-[11px] text-slate-300 leading-relaxed">
-            إذا كان الجدول موجوداً لديك بالفعل، قم بنسخ هذا السطر وتشغيله في <strong>SQL Editor</strong> في Supabase لتمكين البث اللحظي السريع بدون Refresh:
+          <p className="text-[11px] text-[#a1a1aa] leading-relaxed">
+            إذا كان الجدول موجوداً لديك، قم بنسخ هذا السطر وتشغيله في <strong>SQL Editor</strong> في Supabase لتمكين المزامنة الحية بدون Refresh:
           </p>
 
           <pre
-            className="p-2.5 rounded-lg bg-[#0b0e14] border border-[#21262d] text-emerald-300 text-[11px] font-mono overflow-x-auto leading-snug"
+            className="p-2 rounded bg-[#09090b] border border-[#27272a] text-[#22c55e] text-[11px] font-mono overflow-x-auto leading-snug"
             dir="ltr"
           >
             {SUPABASE_ENABLE_REALTIME_SQL}
@@ -185,20 +182,20 @@ export const SupabaseConfigModal: React.FC = () => {
         </div>
 
         {/* Credentials Form */}
-        <form onSubmit={handleSave} className="space-y-3.5">
+        <form onSubmit={handleSave} className="space-y-3">
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-medium text-slate-300">
+              <label className="text-xs font-medium text-[#a1a1aa]">
                 Project URL (رابط المشروع)
               </label>
-              <span className="text-[10px] text-slate-500 font-mono">
+              <span className="text-[10px] text-[#71717a] font-mono">
                 أو عبر VITE_SUPABASE_URL في .env
               </span>
             </div>
             <div className="relative">
               <Globe
-                size={15}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
+                size={14}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#71717a] pointer-events-none"
               />
               <input
                 type="text"
@@ -206,7 +203,7 @@ export const SupabaseConfigModal: React.FC = () => {
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="https://your-project.supabase.co"
-                className="w-full bg-[#18202d] border border-[#2a3446] rounded-lg pr-9 pl-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 font-mono text-left"
+                className="w-full bg-[#18181b] border border-[#27272a] rounded-md pr-9 pl-3 py-1.5 text-xs text-[#f4f4f5] placeholder-[#71717a] focus:outline-hidden focus:border-[#8b5cf6] font-mono text-left"
                 dir="ltr"
               />
             </div>
@@ -214,17 +211,17 @@ export const SupabaseConfigModal: React.FC = () => {
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-medium text-slate-300">
+              <label className="text-xs font-medium text-[#a1a1aa]">
                 Anon API Key (المفتاح العام)
               </label>
-              <span className="text-[10px] text-slate-500 font-mono">
+              <span className="text-[10px] text-[#71717a] font-mono">
                 أو عبر VITE_SUPABASE_ANON_KEY في .env
               </span>
             </div>
             <div className="relative">
               <Key
-                size={15}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
+                size={14}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#71717a] pointer-events-none"
               />
               <input
                 type="text"
@@ -232,7 +229,7 @@ export const SupabaseConfigModal: React.FC = () => {
                 value={anonKey}
                 onChange={(e) => setAnonKey(e.target.value)}
                 placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                className="w-full bg-[#18202d] border border-[#2a3446] rounded-lg pr-9 pl-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 font-mono text-left"
+                className="w-full bg-[#18181b] border border-[#27272a] rounded-md pr-9 pl-3 py-1.5 text-xs text-[#f4f4f5] placeholder-[#71717a] focus:outline-hidden focus:border-[#8b5cf6] font-mono text-left"
                 dir="ltr"
               />
             </div>
@@ -240,8 +237,8 @@ export const SupabaseConfigModal: React.FC = () => {
 
           <div className="flex items-center justify-between pt-1">
             {saveSuccess ? (
-              <span className="text-xs text-emerald-400 font-medium flex items-center gap-1">
-                <CheckCircle2 size={14} />
+              <span className="text-xs text-[#22c55e] font-medium flex items-center gap-1">
+                <CheckCircle2 size={13} />
                 <span>تم حفظ إعدادات الاتصال بنجاح!</span>
               </span>
             ) : (
@@ -250,7 +247,7 @@ export const SupabaseConfigModal: React.FC = () => {
 
             <button
               type="submit"
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-medium transition-colors cursor-pointer"
+              className="px-3 py-1.5 bg-[#8b5cf6] hover:bg-[#7c3aed] text-white rounded-md text-xs font-medium transition-colors cursor-pointer"
             >
               حفظ وتطبيق الاتصال
             </button>
@@ -258,30 +255,30 @@ export const SupabaseConfigModal: React.FC = () => {
         </form>
 
         {/* Full SQL Script Box */}
-        <div className="space-y-2 pt-2 border-t border-[#21262d]">
+        <div className="space-y-2 pt-2 border-t border-[#27272a]">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Code2 size={16} className="text-emerald-400" />
-              <span className="text-xs font-bold text-white">
+            <div className="flex items-center gap-1.5">
+              <Code2 size={14} className="text-[#8b5cf6]" />
+              <span className="text-xs font-medium text-[#f4f4f5]">
                 كود إنشاء جدول البيانات الكامل مع Realtime (SQL Schema)
               </span>
             </div>
             <button
               type="button"
               onClick={handleCopySql}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#1c2331] hover:bg-[#252f42] text-slate-200 text-[11px] font-mono transition-colors cursor-pointer"
+              className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#18181b] hover:bg-[#27272a] text-[#f4f4f5] text-[11px] font-mono transition-colors cursor-pointer border border-[#27272a]"
             >
-              {copiedSql ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
-              <span>{copiedSql ? 'تم النسخ!' : 'نسخ الكود الكامل'}</span>
+              {copiedSql ? <Check size={11} className="text-[#22c55e]" /> : <Copy size={11} />}
+              <span>{copiedSql ? 'تم النسخ' : 'نسخ الكود'}</span>
             </button>
           </div>
 
-          <p className="text-[11px] text-slate-400 leading-relaxed">
+          <p className="text-[11px] text-[#a1a1aa] leading-relaxed">
             إذا كنت تنشئ مشروعاً جديداً، انسخ هذا الكود بالكامل ونفذه في <strong>SQL Editor</strong> في Supabase:
           </p>
 
           <pre
-            className="p-3 rounded-xl bg-[#0b0e14] border border-[#21262d] text-slate-300 text-[11px] font-mono overflow-x-auto max-h-36 leading-snug"
+            className="p-2.5 rounded-md bg-[#09090b] border border-[#27272a] text-[#a1a1aa] text-[11px] font-mono overflow-x-auto max-h-32 leading-snug"
             dir="ltr"
           >
             {SUPABASE_SQL_SCHEMA}
@@ -290,23 +287,30 @@ export const SupabaseConfigModal: React.FC = () => {
 
         {/* Migrate Local Data to Cloud */}
         {user && (
-          <div className="p-3.5 rounded-xl bg-[#161d28] border border-amber-500/30 flex items-center justify-between gap-3 text-xs">
+          <div className="p-3 rounded-lg bg-[#18181b] border border-[#27272a] flex items-center justify-between gap-3 text-xs">
             <div className="space-y-0.5">
-              <span className="font-semibold text-white block">
+              <span className="font-medium text-[#f4f4f5] block">
                 رفع بيانات مابك الحالية إلى السحابة
               </span>
-              <p className="text-[11px] text-slate-400">
-                إذا قمت بأي تعديلات محلية وتريد حفظها فوراً في حسابك في Supabase.
+              <p className="text-[11px] text-[#a1a1aa]">
+                حفظ التعديلات المحلية فوراً في حسابك في Supabase.
               </p>
+              {migrationSuccess && (
+                <p className="text-[11px] text-[#22c55e] font-medium flex items-center gap-1">
+                  <CheckCircle2 size={11} />
+                  <span>تم رفع البيانات بنجاح!</span>
+                </p>
+              )}
             </div>
             <button
               onClick={async () => {
                 await migrateLocalDataToSupabase();
-                alert('تمت مزامنة ورفع البيانات إلى Supabase بنجاح!');
+                setMigrationSuccess(true);
+                setTimeout(() => setMigrationSuccess(false), 3000);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-medium text-xs cursor-pointer shrink-0"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#18181b] hover:bg-[#27272a] border border-[#27272a] text-[#f4f4f5] font-medium text-xs cursor-pointer shrink-0 transition-colors"
             >
-              <UploadCloud size={14} />
+              <UploadCloud size={13} className="text-[#8b5cf6]" />
               <span>مزامنة فورية</span>
             </button>
           </div>
@@ -315,4 +319,3 @@ export const SupabaseConfigModal: React.FC = () => {
     </div>
   );
 };
-

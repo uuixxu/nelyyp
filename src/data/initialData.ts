@@ -148,6 +148,46 @@ export const initialTrackerData: DevTrackerData = {
   ],
   ideas: [],
   bugs: [],
+  notes: [
+    {
+      id: 'note-1',
+      title: 'بنية أنظمة السيرفر والتحقق (Server Architecture & Security)',
+      content: `-- [Demonfall 2 System Architecture]
+-- 1. All hit detection happens on Server with sanity checks
+-- 2. Client sends request via RemoteFunction: Fire("RequestAttack", attackId)
+-- 3. Server validates distance <= 8 studs and cooldowns before dealing damage
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local function validateCombatAction(player, targetCharacter, distanceLimit)
+    local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    local targetRoot = targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart")
+    if not root or not targetRoot then return false end
+    
+    local dist = (root.Position - targetRoot.Position).Magnitude
+    return dist <= (distanceLimit or 9.5)
+end`,
+      category: 'architecture',
+      tags: ['Server', 'Luau', 'Security', 'Combat'],
+      createdAt: '2026-09-26T16:40:00.000Z',
+      updatedAt: '2026-09-26T17:10:00.000Z',
+    },
+    {
+      id: 'note-2',
+      title: 'ملاحظات توازن أسلوب القتال والتنفسات (Breathing Balance Notes)',
+      content: `ملاحظات توازن القتال في Demonfall 2:
+- تنفس الماء: دفاعي وسريع مع حركات دفع وتراجع سلسة (I-Frames أقل ولكن تعافي أسرع).
+- تنفس الشمس: يتطلب مقياس طاقة عالي ويستهلك الجوع بشكل أسرع لموازنة الدمج العالي.
+- نظام الـ Parry:
+  * الضغط في توقيت مثالي (0.2s) يعكس 30% من الضرر ويشل حركة الخصم لـ 0.6s.
+  * الـ Block العادي يقلل 60% من الدمج ولا ينكسر إلا ضد الضربة الثقيلة (Heavy Attack).`,
+      category: 'game_design',
+      tags: ['GameDesign', 'Combat', 'Balancing'],
+      createdAt: '2026-09-26T17:00:00.000Z',
+      updatedAt: '2026-09-26T17:00:00.000Z',
+    }
+  ],
   activities: [
     {
       id: 'act-1790440280607-2joq',
